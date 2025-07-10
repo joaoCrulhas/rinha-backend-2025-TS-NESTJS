@@ -8,7 +8,7 @@ export class CreatePaymentController {
   constructor(private readonly createPaymentService: CreatePaymentService) {}
   @Post()
   @HttpCode(HttpStatus.CREATED)
-  async create(@Body() input: CreatePaymentRequestDto): Promise<Payment> {
+  async execute(@Body() input: CreatePaymentRequestDto): Promise<Payment> {
     return await this.createPaymentService.execute(input);
   }
 }

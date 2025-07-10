@@ -8,6 +8,9 @@ export class Payment {
   @Column('float')
   amount: number;
 
+  @Column('varchar')
+  source: string;
+
   @Column('date')
   requestedAt: Date;
 

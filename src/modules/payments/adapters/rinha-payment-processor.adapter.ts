@@ -18,7 +18,10 @@ export class RinhaPaymentProcessorAdapter implements ICreatePayment {
         this.urlMain,
         input,
       );
-      return response.data;
+      return {
+        ...response.data,
+        source: 'default',
+      };
     } catch (e) {
       this.logger.error('Error in main payment processor');
       this.logger.error(e);
@@ -27,7 +30,10 @@ export class RinhaPaymentProcessorAdapter implements ICreatePayment {
           this.urlFallback,
           input,
         );
-        return response.data;
+        return {
+          ...response.data,
+          source: 'fallback',
+        };
       } catch (e) {
         this.logger.error(e);
         this.logger.error('Error in fallback payment processor');

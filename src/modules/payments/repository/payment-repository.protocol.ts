@@ -5,5 +5,11 @@ export interface IPaymentRepository {
     correlationId: string,
     amount: number,
     requestedAt: Date,
+    source: string,
   ): Promise<Payment>;
+  getPaymentsSummary(
+    source: string,
+    to?: Date,
+    from?: Date,
+  ): Promise<Payment[]>;
 }

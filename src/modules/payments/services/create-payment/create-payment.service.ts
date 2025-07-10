@@ -16,11 +16,12 @@ export class CreatePaymentService {
 
   async execute(input: CreatePaymentRequestDto): Promise<Payment> {
     this.logger.debug(`Registering payment: ${JSON.stringify(input)}`);
-    await this.createPaymentAdapter.execute(input);
+    const { source } = await this.createPaymentAdapter.execute(input);
     return await this.paymentRepository.createPayment(
       input.correlationId,
       input.amount,
       input.requestedAt,
+      source,
     );
   }
 }
