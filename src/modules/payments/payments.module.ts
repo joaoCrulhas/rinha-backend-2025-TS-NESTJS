@@ -22,11 +22,11 @@ const paymentRepositoryFactory: FactoryProvider = {
   imports: [DatabaseModule, HttpModule],
   providers: [
     paymentRepositoryFactory,
-    CreatePaymentService,
     {
       provide: 'PAYMENT_PROCESSOR_ADAPTER',
       useClass: RinhaPaymentProcessorAdapter,
     },
+    CreatePaymentService,
   ],
 })
 export class PaymentsModule {}

@@ -1,10 +1,8 @@
 import { Inject, Injectable, Logger } from '@nestjs/common';
 import { ICreatePayment } from '@payments/protocols';
-import {
-  CreatePaymentRequestDto,
-  CreatePaymentResponseDto,
-} from '@payments/dtos';
+import { CreatePaymentRequestDto } from '@payments/dtos';
 import { IPaymentRepository } from '@payments/repository/payment-repository.protocol';
+import { Payment } from '@payments/entities';
 
 @Injectable()
 export class CreatePaymentService {
@@ -17,16 +15,13 @@ export class CreatePaymentService {
     private readonly createPaymentAdapter: ICreatePayment,
   ) {}
 
-  async execute(
-    input: CreatePaymentRequestDto,
-  ): Promise<CreatePaymentResponseDto> {
+  async execute(input: CreatePaymentRequestDto): Promise<Payment> {
     this.logger.debug(`Registering payment: ${JSON.stringify(input)}`);
     await this.createPaymentAdapter.execute(input);
-    await this.paymentRepository.createPayment(
+    return await this.paymentRepository.createPayment(
       input.correlationId,
       input.amount,
       input.requestedAt,
     );
-    return new CreatePaymentResponseDto('Payment registered successfully');
   }
 }

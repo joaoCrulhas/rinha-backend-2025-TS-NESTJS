@@ -1,10 +1,9 @@
 import { DataSource } from 'typeorm';
 import { Payment } from '@payments/entities';
 import { SqliteConnectionOptions } from 'typeorm/driver/sqlite/SqliteConnectionOptions';
-import * as path from 'node:path';
 
 const sqlConnectionOptions: SqliteConnectionOptions = {
-  database: path.join(__dirname, 'database.sqlite'),
+  database: './database.sqlite',
   entities: [Payment],
   logging: true,
   synchronize: true,
