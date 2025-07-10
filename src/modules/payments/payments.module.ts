@@ -9,6 +9,7 @@ import {
 } from '@payments/repository';
 import { HttpModule } from '@nestjs/axios';
 import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
+import { CreatePaymentController } from '@payments/controllers';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -19,6 +20,7 @@ const paymentRepositoryFactory: FactoryProvider = {
   },
 };
 @Module({
+  controllers: [CreatePaymentController],
   imports: [DatabaseModule, HttpModule],
   providers: [
     paymentRepositoryFactory,

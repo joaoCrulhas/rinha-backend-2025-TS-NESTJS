@@ -10,7 +10,6 @@ export class CreatePaymentService {
   constructor(
     @Inject('PAYMENT_REPOSITORY')
     private readonly paymentRepository: IPaymentRepository,
-
     @Inject('PAYMENT_PROCESSOR_ADAPTER')
     private readonly createPaymentAdapter: ICreatePayment,
   ) {}
