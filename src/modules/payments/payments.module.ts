@@ -1,6 +1,9 @@
 import { FactoryProvider, Module } from '@nestjs/common';
 import { DatabaseModule } from '@database/database.module';
-import { CreatePaymentService } from '@payments/services';
+import {
+  CreatePaymentService,
+  PaymentsSummaryService,
+} from '@payments/services';
 import { DataSource } from 'typeorm';
 import { Payment } from '@payments/entities';
 import {
@@ -9,7 +12,10 @@ import {
 } from '@payments/repository';
 import { HttpModule } from '@nestjs/axios';
 import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
-import { CreatePaymentController } from '@payments/controllers';
+import {
+  CreatePaymentController,
+  PaymentsSummaryController,
+} from '@payments/controllers';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -20,7 +26,7 @@ const paymentRepositoryFactory: FactoryProvider = {
   },
 };
 @Module({
-  controllers: [CreatePaymentController],
+  controllers: [CreatePaymentController, PaymentsSummaryController],
   imports: [DatabaseModule, HttpModule],
   providers: [
     paymentRepositoryFactory,
@@ -29,6 +35,7 @@ const paymentRepositoryFactory: FactoryProvider = {
       useClass: RinhaPaymentProcessorAdapter,
     },
     CreatePaymentService,
+    PaymentsSummaryService,
   ],
 })
 export class PaymentsModule {}
