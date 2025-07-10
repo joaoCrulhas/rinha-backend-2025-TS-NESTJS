@@ -18,6 +18,8 @@
     "forceConsistentCasingInFileNames": false,
     "noFallthroughCasesInSwitch": false,
     "paths": {
+      "@database/*": ["./src/modules/infra/database/*"],
+      "@payments/*": ["./src/modules/payments/*"],
       "@payment-health-check/*": ["./src/modules/payment-health-check/*"]
     }
   }
