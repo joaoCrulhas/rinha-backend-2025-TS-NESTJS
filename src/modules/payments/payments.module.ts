@@ -19,6 +19,7 @@ import { BullModule } from '@nestjs/bullmq';
 import { ProcessPaymentProcessor } from '@payments/processors';
 import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
 import { ServerType } from '@payments/types';
+import * as process from 'node:process';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -31,14 +32,18 @@ const paymentRepositoryFactory: FactoryProvider = {
 const rinhaPaymentProcessorAdapter: FactoryProvider = {
   provide: 'PAYMENT_PROCESSOR_ADAPTER',
   useFactory: function () {
+    const rinhaDefaultUrl: string = process.env
+      .PAYMENT_PROCESSOR_URL_DEFAULT as string;
+    const fallbackUrl: string = process.env
+      .PAYMENT_PROCESSOR_URL_FALLBACK as string;
     const servers: Array<ServerType> = [
       {
         host: 'default',
-        url: 'http://localhost:8001',
+        url: rinhaDefaultUrl,
       },
       {
         host: 'fallback',
-        url: 'http://localhost:8002',
+        url: fallbackUrl,
       },
     ];
     return new RinhaPaymentProcessorAdapter(servers);

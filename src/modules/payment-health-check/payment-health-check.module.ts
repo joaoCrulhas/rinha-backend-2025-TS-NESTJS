@@ -4,24 +4,26 @@ import {
   GetPaymentProcessorStatusService,
   PaymentHealthCheckCronService,
 } from '@payment-health-check/services';
-import { HttpModule, HttpService } from '@nestjs/axios';
+import { HttpModule } from '@nestjs/axios';
 import { RinhaPaymentProcessorHealthCheckAdapter } from '@payment-health-check/adapters/rinha-payment-processor-health-check.adapter';
 
 const getPaymentProcessorFactory: FactoryProvider = {
   provide: 'GET_PAYMENT_PROCESSOR_STATUS_SERVICE',
-  inject: [HttpService],
-  useFactory: function (httpService: HttpService) {
-    // Todo: Replace to use the config service.
+  useFactory: function () {
+    const healthEndpoint: string = '/payments/service-health';
     const paymentProcessorHealthCheckUrlMain =
-      'http://localhost:8001/payments/service-health';
-    // Todo: Replace to use the config service.
+      (process.env.PAYMENT_PROCESSOR_URL_DEFAULT ?? 'http://localhost:8001') +
+      '/' +
+      healthEndpoint;
     const paymentProcessorHealthCheckUrlFallback =
-      'http://localhost:8002/payments/service-health';
+      (process.env.PAYMENT_PROCESSOR_URL_FALLBACK ?? 'http://localhost:8002') +
+      '/' +
+      healthEndpoint;
     const rinhaHealthCheckAdapter = new RinhaPaymentProcessorHealthCheckAdapter(
-      httpService,
       paymentProcessorHealthCheckUrlMain,
       paymentProcessorHealthCheckUrlFallback,
     );
+
     return new GetPaymentProcessorStatusService(rinhaHealthCheckAdapter);
   },
 };

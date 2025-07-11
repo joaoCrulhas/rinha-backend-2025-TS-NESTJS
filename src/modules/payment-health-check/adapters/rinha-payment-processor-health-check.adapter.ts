@@ -1,11 +1,10 @@
 import { IHealthCheckPaymentProcessor } from '@payment-health-check/protocols';
-import { HttpService } from '@nestjs/axios';
-import { lastValueFrom } from 'rxjs';
 import { Logger } from '@nestjs/common';
 import {
   PaymentProcessorStatusResponse,
   RinhaHealthCheckResponseDto,
 } from '@payment-health-check/dtos';
+import axios from 'axios';
 
 export class RinhaPaymentProcessorHealthCheckAdapter
   implements IHealthCheckPaymentProcessor
@@ -15,36 +14,29 @@ export class RinhaPaymentProcessorHealthCheckAdapter
   );
 
   constructor(
-    private readonly httpService: HttpService,
     private readonly paymentProcessorHealthCheckUrlMain: string,
     private readonly paymentProcessorHealthCheckUrlFallback: string,
   ) {}
 
   async checkHealth(): Promise<PaymentProcessorStatusResponse> {
     try {
-      const fetchMainProcessorStatus =
-        this.httpService.get<RinhaHealthCheckResponseDto>(
+      const responseDefaultServer =
+        await axios.get<RinhaHealthCheckResponseDto>(
           this.paymentProcessorHealthCheckUrlMain,
         );
-      const fetchFallbackProcessorStatus =
-        this.httpService.get<RinhaHealthCheckResponseDto>(
+      const responseFallbackServer =
+        await axios.get<RinhaHealthCheckResponseDto>(
           this.paymentProcessorHealthCheckUrlFallback,
         );
-      const { data: mainProcessorStatus } = await lastValueFrom(
-        fetchMainProcessorStatus,
-      );
-      const { data: fallbackProcessorStatus } = await lastValueFrom(
-        fetchFallbackProcessorStatus,
+      this.logger.debug(
+        `Main processor status: ${JSON.stringify(responseDefaultServer.data)}`,
       );
       this.logger.debug(
-        `Main processor status: ${JSON.stringify(mainProcessorStatus)}`,
-      );
-      this.logger.debug(
-        `Fallback processor status: ${JSON.stringify(fallbackProcessorStatus)}`,
+        `Fallback processor status: ${JSON.stringify(responseFallbackServer.data)}`,
       );
       return {
-        mainProcessorStatus,
-        fallbackProcessorStatus,
+        mainProcessorStatus: responseDefaultServer.data,
+        fallbackProcessorStatus: responseFallbackServer.data,
       };
     } catch (error) {
       this.logger.error(error);
