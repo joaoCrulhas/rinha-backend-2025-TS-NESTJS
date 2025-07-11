@@ -11,15 +11,19 @@ export class ProcessPaymentProcessor extends WorkerHost {
   constructor(private readonly createPaymentService: CreatePaymentService) {
     super();
   }
-  async process(
-    job: Job<CreatePaymentRequestDto, Payment, string>,
-  ): Promise<any> {
+  async process(job: Job<CreatePaymentRequestDto, Payment>): Promise<any> {
     this.logger.debug(`Processing payment: ${JSON.stringify(job.data)}`);
     return await this.createPaymentService.execute(job.data);
   }
 
   @OnWorkerEvent('completed')
-  onCompleted() {
-    // do some stuff
+  onCompleted(job: Job<CreatePaymentRequestDto, Payment>) {
+    console.log(JSON.stringify(job));
+  }
+
+  @OnWorkerEvent('failed')
+  async onFailed(job: Job<CreatePaymentRequestDto, Payment>) {
+    this.logger.log(`Processing payment: ${JSON.stringify(job.data)}`);
+    await this.createPaymentService.execute(job.data, 'fallback');
   }
 }

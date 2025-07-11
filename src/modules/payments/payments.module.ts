@@ -11,13 +11,14 @@ import {
   PaymentRepositoryTypeormRepository,
 } from '@payments/repository';
 import { HttpModule } from '@nestjs/axios';
-import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
 import {
   CreatePaymentController,
   PaymentsSummaryController,
 } from '@payments/controllers';
 import { BullModule } from '@nestjs/bullmq';
 import { ProcessPaymentProcessor } from '@payments/processors';
+import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
+import { ServerType } from '@payments/types';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -27,11 +28,22 @@ const paymentRepositoryFactory: FactoryProvider = {
     return new PaymentRepositoryTypeormRepository(paymentRepository);
   },
 };
-const rinhaPaymentProcessorAdapter = {
+const rinhaPaymentProcessorAdapter: FactoryProvider = {
   provide: 'PAYMENT_PROCESSOR_ADAPTER',
-  useClass: RinhaPaymentProcessorAdapter,
+  useFactory: function () {
+    const servers: Array<ServerType> = [
+      {
+        host: 'default',
+        url: 'http://localhost:8001',
+      },
+      {
+        host: 'fallback',
+        url: 'http://localhost:8002',
+      },
+    ];
+    return new RinhaPaymentProcessorAdapter(servers);
+  },
 };
-
 @Module({
   controllers: [CreatePaymentController, PaymentsSummaryController],
   imports: [

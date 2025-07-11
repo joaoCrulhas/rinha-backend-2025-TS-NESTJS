@@ -3,6 +3,7 @@ import { ICreatePayment } from '@payments/protocols';
 import { CreatePaymentRequestDto } from '@payments/dtos';
 import { IPaymentRepository } from '@payments/repository/payment-repository.protocol';
 import { Payment } from '@payments/entities';
+import { Host } from '@payments/types';
 
 @Injectable()
 export class CreatePaymentService {
@@ -14,9 +15,12 @@ export class CreatePaymentService {
     private readonly createPaymentAdapter: ICreatePayment,
   ) {}
 
-  async execute(input: CreatePaymentRequestDto): Promise<Payment> {
+  async execute(
+    input: CreatePaymentRequestDto,
+    server: Host = 'default',
+  ): Promise<Payment> {
     this.logger.debug(`Registering payment: ${JSON.stringify(input)}`);
-    const { source } = await this.createPaymentAdapter.execute(input);
+    const { source } = await this.createPaymentAdapter.execute(input, server);
     return await this.paymentRepository.createPayment(
       input.correlationId,
       input.amount,

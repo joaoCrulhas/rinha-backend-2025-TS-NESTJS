@@ -5,40 +5,47 @@ import {
 import { ICreatePayment } from '@payments/protocols';
 import axios from 'axios';
 import { Logger } from '@nestjs/common';
+import { Host, ServerType } from '@payments/types';
 
 export class RinhaPaymentProcessorAdapter implements ICreatePayment {
   private logger = new Logger(RinhaPaymentProcessorAdapter.name);
-  private urlMain = 'http://localhost:8001/payments';
-  private urlFallback = 'http://localhost:8002/payments';
+  private readonly servers: Array<ServerType> = [];
+
+  constructor(servers: Array<ServerType>) {
+    this.servers = servers;
+  }
+
   async execute(
     input: CreatePaymentRequestDto,
+    host: Host = 'default',
   ): Promise<CreatePaymentResponseDto> {
     try {
+      this.logger.log(
+        `Processing payment: ${JSON.stringify(input)}, host: ${host}`,
+        {
+          host,
+        },
+      );
       const response = await axios.post<CreatePaymentResponseDto>(
-        this.urlMain,
+        this.getHostUrl(host) + '/payments',
         input,
       );
       return {
         ...response.data,
-        source: 'default',
+        source: host,
       };
     } catch (e) {
       this.logger.error('Error in main payment processor');
       this.logger.error(e);
-      try {
-        const response = await axios.post<CreatePaymentResponseDto>(
-          this.urlFallback,
-          input,
-        );
-        return {
-          ...response.data,
-          source: 'fallback',
-        };
-      } catch (e) {
-        this.logger.error(e);
-        this.logger.error('Error in fallback payment processor');
-        throw e;
-      }
+      throw e;
     }
+  }
+
+  private getHostUrl(host: Host): string {
+    const server = this.servers.find((s) => s.host === host);
+    if (!server) {
+      throw new Error('Server not found');
+    }
+    return server.url;
   }
 }
