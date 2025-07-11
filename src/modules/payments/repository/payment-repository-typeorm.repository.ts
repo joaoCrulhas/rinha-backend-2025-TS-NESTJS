@@ -5,6 +5,26 @@ import { Payment } from '@payments/entities';
 export class PaymentRepositoryTypeormRepository implements IPaymentRepository {
   constructor(private paymentRepository: Repository<Payment>) {}
 
+  async createPayment(
+    correlationId: string,
+    amount: number,
+    requestedAt: Date,
+    source: string,
+  ): Promise<Payment> {
+    const paymentCreated = await this.paymentRepository.save({
+      correlationId,
+      amount,
+      requestedAt,
+      source,
+    });
+
+    return new Payment(
+      paymentCreated.correlationId,
+      paymentCreated.amount,
+      paymentCreated.requestedAt,
+    );
+  }
+
   async getPaymentsSummary(
     source: string,
     to?: Date,
@@ -19,23 +39,5 @@ export class PaymentRepositoryTypeormRepository implements IPaymentRepository {
       queryBuilder.andWhere('payment.requestedAt <= :to', { to });
     }
     return await queryBuilder.getMany();
-  }
-
-  async createPayment(
-    correlationId: string,
-    amount: number,
-    requestedAt: Date,
-  ): Promise<Payment> {
-    const paymentCreated = await this.paymentRepository.save({
-      correlationId,
-      amount,
-      requestedAt,
-    });
-
-    return new Payment(
-      paymentCreated.correlationId,
-      paymentCreated.amount,
-      paymentCreated.requestedAt,
-    );
   }
 }

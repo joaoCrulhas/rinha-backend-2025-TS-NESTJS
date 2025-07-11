@@ -16,6 +16,8 @@ import {
   CreatePaymentController,
   PaymentsSummaryController,
 } from '@payments/controllers';
+import { BullModule } from '@nestjs/bullmq';
+import { ProcessPaymentProcessor } from '@payments/processors';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -25,17 +27,32 @@ const paymentRepositoryFactory: FactoryProvider = {
     return new PaymentRepositoryTypeormRepository(paymentRepository);
   },
 };
+const rinhaPaymentProcessorAdapter = {
+  provide: 'PAYMENT_PROCESSOR_ADAPTER',
+  useClass: RinhaPaymentProcessorAdapter,
+};
+
 @Module({
   controllers: [CreatePaymentController, PaymentsSummaryController],
-  imports: [DatabaseModule, HttpModule],
+  imports: [
+    DatabaseModule,
+    HttpModule,
+    BullModule.registerQueue({
+      name: 'process-payment-queue',
+      defaultJobOptions: {
+        backoff: {
+          type: 'exponential',
+          delay: 1000,
+        },
+      },
+    }),
+  ],
   providers: [
     paymentRepositoryFactory,
-    {
-      provide: 'PAYMENT_PROCESSOR_ADAPTER',
-      useClass: RinhaPaymentProcessorAdapter,
-    },
+    rinhaPaymentProcessorAdapter,
     CreatePaymentService,
     PaymentsSummaryService,
+    ProcessPaymentProcessor,
   ],
 })
 export class PaymentsModule {}
