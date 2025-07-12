@@ -5,9 +5,26 @@ import { PaymentHealthCheckModule } from '@payment-health-check/payment-health-c
 import { PaymentsModule } from '@payments/payments.module';
 import { BullModule } from '@nestjs/bullmq';
 import * as process from 'node:process';
+import { CacheModule } from '@nestjs/cache-manager';
+import { createKeyv, Keyv } from '@keyv/redis';
+import { CacheableMemory } from 'cacheable';
 
 @Module({
   imports: [
+    CacheModule.registerAsync({
+      isGlobal: true,
+      useFactory: async () => {
+        const redisUrl: string = `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}`;
+        return {
+          stores: [
+            new Keyv({
+              store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
+            }),
+            createKeyv(redisUrl),
+          ],
+        };
+      },
+    }),
     BullModule.forRoot({
       connection: {
         host: process.env.REDIS_HOST ?? 'localhost',

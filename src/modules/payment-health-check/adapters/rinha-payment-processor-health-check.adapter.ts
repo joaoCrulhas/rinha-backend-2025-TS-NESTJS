@@ -19,28 +19,35 @@ export class RinhaPaymentProcessorHealthCheckAdapter
   ) {}
 
   async checkHealth(): Promise<PaymentProcessorStatusResponse> {
+    const serverStatusResponse: PaymentProcessorStatusResponse = {
+      mainProcessorStatus: null,
+      fallbackProcessorStatus: null,
+    };
+    await this.makeRequest(serverStatusResponse, 'mainProcessorStatus');
+    await this.makeRequest(serverStatusResponse, 'fallbackProcessorStatus');
+    return serverStatusResponse;
+  }
+
+  private async makeRequest(
+    serverStatusResponse: PaymentProcessorStatusResponse,
+    server: 'mainProcessorStatus' | 'fallbackProcessorStatus',
+  ) {
+    const url =
+      server === 'mainProcessorStatus'
+        ? this.paymentProcessorHealthCheckUrlMain
+        : this.paymentProcessorHealthCheckUrlFallback;
     try {
-      const responseDefaultServer =
-        await axios.get<RinhaHealthCheckResponseDto>(
-          this.paymentProcessorHealthCheckUrlMain,
-        );
-      const responseFallbackServer =
-        await axios.get<RinhaHealthCheckResponseDto>(
-          this.paymentProcessorHealthCheckUrlFallback,
-        );
+      const response = await axios.get<RinhaHealthCheckResponseDto>(url);
       this.logger.debug(
-        `Main processor status: ${JSON.stringify(responseDefaultServer.data)}`,
+        `${server} processor status: ${JSON.stringify(response.data)}`,
       );
-      this.logger.debug(
-        `Fallback processor status: ${JSON.stringify(responseFallbackServer.data)}`,
-      );
-      return {
-        mainProcessorStatus: responseDefaultServer.data,
-        fallbackProcessorStatus: responseFallbackServer.data,
+      serverStatusResponse[server] = response.data;
+    } catch (e) {
+      this.logger.error(e);
+      serverStatusResponse[server] = {
+        failing: true,
+        minResponseTime: 0,
       };
-    } catch (error) {
-      this.logger.error(error);
-      throw error;
     }
   }
 }

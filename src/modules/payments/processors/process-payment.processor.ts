@@ -24,6 +24,14 @@ export class ProcessPaymentProcessor extends WorkerHost {
   @OnWorkerEvent('failed')
   async onFailed(job: Job<CreatePaymentRequestDto, Payment>) {
     this.logger.log(`Processing payment: ${JSON.stringify(job.data)}`);
-    await this.createPaymentService.execute(job.data, 'fallback');
+    try {
+      this.logger.log(`Retrying payment: ${JSON.stringify(job.data)}`);
+      await this.createPaymentService.execute(job.data);
+    } catch (error: any) {
+      this.logger.log(
+        `Retrying payment: ${JSON.stringify(error)} with fallback`,
+      );
+      await this.createPaymentService.execute(job.data, 'fallback');
+    }
   }
 }
