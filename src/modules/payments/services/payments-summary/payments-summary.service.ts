@@ -1,16 +1,18 @@
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, Logger } from '@nestjs/common';
 import { IPaymentRepository } from '@payments/repository';
 import { PaymentsData, PaymentsSummaryResponseDto } from '@payments/dtos';
 import { Payment } from '@payments/entities';
 
 @Injectable()
 export class PaymentsSummaryService {
+  private readonly logger = new Logger(PaymentsSummaryService.name);
   constructor(
     @Inject('PAYMENT_REPOSITORY')
     private readonly paymentRepository: IPaymentRepository,
   ) {}
 
   async execute(to?: Date, from?: Date): Promise<PaymentsSummaryResponseDto> {
+    this.logger.debug(`Get payments summary: ${JSON.stringify({ to, from })}`);
     const defaultPayments = await this.paymentRepository.getPaymentsSummary(
       'default',
       to,
@@ -22,10 +24,12 @@ export class PaymentsSummaryService {
       from,
     );
 
-    return new PaymentsSummaryResponseDto(
+    const paymentsSummary = new PaymentsSummaryResponseDto(
       this.parsePaymentData(defaultPayments),
       this.parsePaymentData(fallbackPayments),
     );
+    this.logger.log(`Get payments summary: ${JSON.stringify(paymentsSummary)}`);
+    return paymentsSummary;
   }
 
   private parsePaymentData(payments: Payment[]): PaymentsData {
