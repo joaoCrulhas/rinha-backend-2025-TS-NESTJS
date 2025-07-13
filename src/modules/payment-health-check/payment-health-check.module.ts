@@ -10,7 +10,7 @@ import { RinhaPaymentProcessorHealthCheckAdapter } from '@payment-health-check/a
 const getPaymentProcessorFactory: FactoryProvider = {
   provide: 'GET_PAYMENT_PROCESSOR_STATUS_SERVICE',
   useFactory: function () {
-    const healthEndpoint: string = '/payments/service-health';
+    const healthEndpoint: string = 'payments/service-health';
     const paymentProcessorHealthCheckUrlMain =
       (process.env.PAYMENT_PROCESSOR_URL_DEFAULT ?? 'http://localhost:8001') +
       '/' +

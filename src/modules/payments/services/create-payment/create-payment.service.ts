@@ -19,12 +19,13 @@ export class CreatePaymentService {
     input: CreatePaymentRequestDto,
     server: Host = 'default',
   ): Promise<Payment> {
+    const requestedAt = new Date();
     this.logger.debug(`Registering payment: ${JSON.stringify(input)}`);
     const { source } = await this.createPaymentAdapter.execute(input, server);
     return await this.paymentRepository.createPayment(
       input.correlationId,
       input.amount,
-      input.requestedAt,
+      requestedAt,
       source,
     );
   }

@@ -13,12 +13,12 @@ export class ProcessPaymentProcessor extends WorkerHost {
   }
   async process(job: Job<CreatePaymentRequestDto, Payment>): Promise<any> {
     this.logger.debug(`Processing payment: ${JSON.stringify(job.data)}`);
-    return await this.createPaymentService.execute(job.data);
+    return await this.createPaymentService.execute(job.data, 'default');
   }
 
   @OnWorkerEvent('completed')
   onCompleted(job: Job<CreatePaymentRequestDto, Payment>) {
-    console.log(JSON.stringify(job));
+    this.logger.log(`Payment processed: ${JSON.stringify(job.returnvalue)}`);
   }
 
   @OnWorkerEvent('failed')
@@ -28,7 +28,7 @@ export class ProcessPaymentProcessor extends WorkerHost {
       this.logger.log(`Retrying payment: ${JSON.stringify(job.data)}`);
       await this.createPaymentService.execute(job.data);
     } catch (error: any) {
-      this.logger.log(
+      this.logger.error(
         `Retrying payment: ${JSON.stringify(error)} with fallback`,
       );
       await this.createPaymentService.execute(job.data, 'fallback');

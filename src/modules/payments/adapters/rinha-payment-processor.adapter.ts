@@ -2,17 +2,29 @@ import {
   CreatePaymentRequestDto,
   CreatePaymentResponseDto,
 } from '@payments/dtos';
-import { ICreatePayment } from '@payments/protocols';
+import { ICreatePayment, IPaymentsPurge } from '@payments/protocols';
 import axios from 'axios';
 import { Logger } from '@nestjs/common';
 import { Host, ServerType } from '@payments/types';
 
-export class RinhaPaymentProcessorAdapter implements ICreatePayment {
+export class RinhaPaymentProcessorAdapter
+  implements ICreatePayment, IPaymentsPurge
+{
   private logger = new Logger(RinhaPaymentProcessorAdapter.name);
   private readonly servers: Array<ServerType> = [];
+  private readonly rinhaAdminToken: string;
 
-  constructor(servers: Array<ServerType>) {
+  constructor(servers: Array<ServerType>, rinhaAdminToken: string) {
     this.servers = servers;
+    this.rinhaAdminToken = rinhaAdminToken;
+  }
+
+  async purge(host: Host = 'default'): Promise<void> {
+    await axios.post(this.getHostUrl(host) + '/admin/purge-payments', null, {
+      headers: {
+        'X-Rinha-Token': this.rinhaAdminToken,
+      },
+    });
   }
 
   async execute(

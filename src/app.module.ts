@@ -1,16 +1,19 @@
 import { Module } from '@nestjs/common';
 import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import { PaymentHealthCheckModule } from '@payment-health-check/payment-health-check.module';
 import { PaymentsModule } from '@payments/payments.module';
 import { BullModule } from '@nestjs/bullmq';
 import * as process from 'node:process';
 import { CacheModule } from '@nestjs/cache-manager';
 import { createKeyv, Keyv } from '@keyv/redis';
 import { CacheableMemory } from 'cacheable';
+import { PaymentHealthCheckModule } from '@payment-health-check/payment-health-check.module';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
   imports: [
+    ConfigModule.forRoot({
+      isGlobal: true,
+    }),
     CacheModule.registerAsync({
       isGlobal: true,
       useFactory: async () => {
@@ -32,9 +35,11 @@ import { CacheableMemory } from 'cacheable';
       },
     }),
     PaymentsModule,
-    PaymentHealthCheckModule,
+    ...(process.env.RUNHEALTHCHECK === 'true'
+      ? [PaymentHealthCheckModule]
+      : []),
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [],
 })
 export class AppModule {}

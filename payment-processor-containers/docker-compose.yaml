@@ -151,6 +151,8 @@ services:
       - "6379:6379"
 
   nginx:
+    networks:
+      - backend
     image: nginx:stable-alpine
     container_name: nginx-load-balancer
     ports:

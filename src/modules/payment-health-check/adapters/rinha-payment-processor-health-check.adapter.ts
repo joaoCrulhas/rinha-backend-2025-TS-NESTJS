@@ -36,6 +36,7 @@ export class RinhaPaymentProcessorHealthCheckAdapter
       server === 'mainProcessorStatus'
         ? this.paymentProcessorHealthCheckUrlMain
         : this.paymentProcessorHealthCheckUrlFallback;
+    console.log(url);
     try {
       const response = await axios.get<RinhaHealthCheckResponseDto>(url);
       this.logger.debug(

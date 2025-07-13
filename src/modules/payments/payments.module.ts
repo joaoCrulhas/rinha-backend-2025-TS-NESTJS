@@ -3,6 +3,7 @@ import { DatabaseModule } from '@database/database.module';
 import {
   CreatePaymentService,
   PaymentsSummaryService,
+  PurgePaymentsService,
 } from '@payments/services';
 import { DataSource } from 'typeorm';
 import { Payment } from '@payments/entities';
@@ -14,12 +15,13 @@ import { HttpModule } from '@nestjs/axios';
 import {
   CreatePaymentController,
   PaymentsSummaryController,
+  PurgeController,
 } from '@payments/controllers';
 import { BullModule } from '@nestjs/bullmq';
 import { ProcessPaymentProcessor } from '@payments/processors';
 import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
 import { ServerType } from '@payments/types';
-import * as process from 'node:process';
+import { ConfigService } from '@nestjs/config';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -31,11 +33,13 @@ const paymentRepositoryFactory: FactoryProvider = {
 };
 const rinhaPaymentProcessorAdapter: FactoryProvider = {
   provide: 'PAYMENT_PROCESSOR_ADAPTER',
-  useFactory: function () {
-    const rinhaDefaultUrl: string = process.env
-      .PAYMENT_PROCESSOR_URL_DEFAULT as string;
-    const fallbackUrl: string = process.env
-      .PAYMENT_PROCESSOR_URL_FALLBACK as string;
+  useFactory: function (configService: ConfigService) {
+    const rinhaDefaultUrl = configService.getOrThrow<string>(
+      'PAYMENT_PROCESSOR_URL_DEFAULT',
+    );
+    const fallbackUrl: string = configService.getOrThrow<string>(
+      'PAYMENT_PROCESSOR_URL_FALLBACK',
+    );
     const servers: Array<ServerType> = [
       {
         host: 'default',
@@ -46,11 +50,17 @@ const rinhaPaymentProcessorAdapter: FactoryProvider = {
         url: fallbackUrl,
       },
     ];
-    return new RinhaPaymentProcessorAdapter(servers);
+    const token: string = configService.getOrThrow<string>('RINHA_TOKEN');
+    return new RinhaPaymentProcessorAdapter(servers, token);
   },
+  inject: [ConfigService],
 };
 @Module({
-  controllers: [CreatePaymentController, PaymentsSummaryController],
+  controllers: [
+    CreatePaymentController,
+    PaymentsSummaryController,
+    PurgeController,
+  ],
   imports: [
     DatabaseModule,
     HttpModule,
@@ -70,6 +80,7 @@ const rinhaPaymentProcessorAdapter: FactoryProvider = {
     CreatePaymentService,
     PaymentsSummaryService,
     ProcessPaymentProcessor,
+    PurgePaymentsService,
   ],
 })
 export class PaymentsModule {}

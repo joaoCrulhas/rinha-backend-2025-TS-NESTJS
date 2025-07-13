@@ -10,3 +10,7 @@ export interface ICreatePayment {
     server: Host,
   ): Promise<CreatePaymentResponseDto>;
 }
+
+export interface IPaymentsPurge {
+  purge(): Promise<void>;
+}
