@@ -14,3 +14,5 @@ export interface ICreatePayment {
 export interface IPaymentsPurge {
   purge(): Promise<void>;
 }
+
+export type PaymentProcessorType = ICreatePayment & IPaymentsPurge;

@@ -22,6 +22,7 @@ import { ProcessPaymentProcessor } from '@payments/processors';
 import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
 import { ServerType } from '@payments/types';
 import { ConfigService } from '@nestjs/config';
+import { PaymentProcessorType } from '@payments/protocols';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -33,7 +34,7 @@ const paymentRepositoryFactory: FactoryProvider = {
 };
 const rinhaPaymentProcessorAdapter: FactoryProvider = {
   provide: 'PAYMENT_PROCESSOR_ADAPTER',
-  useFactory: function (configService: ConfigService) {
+  useFactory: function (configService: ConfigService): PaymentProcessorType {
     const rinhaDefaultUrl = configService.getOrThrow<string>(
       'PAYMENT_PROCESSOR_URL_DEFAULT',
     );
@@ -67,6 +68,7 @@ const rinhaPaymentProcessorAdapter: FactoryProvider = {
     BullModule.registerQueue({
       name: 'process-payment-queue',
       defaultJobOptions: {
+        attempts: 3,
         backoff: {
           type: 'exponential',
           delay: 1000,
