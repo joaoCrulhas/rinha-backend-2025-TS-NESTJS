@@ -17,7 +17,7 @@ export class CreatePaymentService {
 
   async execute(
     input: CreatePaymentRequestDto,
-    server: Host = 'default',
+    server: Host,
   ): Promise<Payment> {
     const requestedAt = new Date();
     this.logger.debug(`Registering payment: ${JSON.stringify(input)}`);

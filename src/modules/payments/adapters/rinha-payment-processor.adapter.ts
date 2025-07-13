@@ -34,9 +34,6 @@ export class RinhaPaymentProcessorAdapter
     try {
       this.logger.log(
         `Processing payment: ${JSON.stringify(input)}, host: ${host}`,
-        {
-          host,
-        },
       );
       const response = await axios.post<CreatePaymentResponseDto>(
         this.getHostUrl(host) + '/payments',
@@ -47,7 +44,7 @@ export class RinhaPaymentProcessorAdapter
         source: host,
       };
     } catch (e) {
-      this.logger.error('Error in main payment processor');
+      this.logger.error(`Error in ${host} payment processor`);
       this.logger.error(e);
       throw e;
     }
