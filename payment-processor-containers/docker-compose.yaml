@@ -1,9 +1,7 @@
 x-service-templates:
   # Base app service template
   app-base: &app-base
-    build:
-      context: ../
-      dockerfile: Dockerfile
+    image: joaocrulhas/rinha-backend-2025:latest
     networks:
       - backend
       - payment-processor

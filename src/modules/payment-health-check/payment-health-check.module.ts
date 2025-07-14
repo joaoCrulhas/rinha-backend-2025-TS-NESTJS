@@ -1,9 +1,6 @@
 import { FactoryProvider, Module } from '@nestjs/common';
 import { ScheduleModule } from '@nestjs/schedule';
-import {
-  GetPaymentProcessorStatusService,
-  PaymentHealthCheckCronService,
-} from '@payment-health-check/services';
+import { GetPaymentProcessorStatusService } from '@payment-health-check/services';
 import { HttpModule } from '@nestjs/axios';
 import { RinhaPaymentProcessorHealthCheckAdapter } from '@payment-health-check/adapters/rinha-payment-processor-health-check.adapter';
 
@@ -36,7 +33,10 @@ const getPaymentProcessorFactory: FactoryProvider = {
  * */
 @Module({
   imports: [ScheduleModule.forRoot(), HttpModule],
-  providers: [getPaymentProcessorFactory, PaymentHealthCheckCronService],
+  providers: [
+    getPaymentProcessorFactory,
+    // PaymentHealthCheckCronService
+  ],
   exports: [getPaymentProcessorFactory],
 })
 export class PaymentHealthCheckModule {}
