@@ -3,9 +3,7 @@ import { Job } from 'bullmq';
 import { CreatePaymentRequestDto } from '@payments/dtos';
 import { CreatePaymentService } from '@payments/services';
 import { Payment } from '@payments/entities';
-import { Inject, Logger } from '@nestjs/common';
-import { CACHE_MANAGER } from '@nestjs/cache-manager';
-import { Cache } from 'cache-manager';
+import { Logger } from '@nestjs/common';
 
 @Processor('process-payment-queue', {
   concurrency: 10,
@@ -18,10 +16,7 @@ import { Cache } from 'cache-manager';
 // fallbackProcessorStatus
 export class ProcessPaymentProcessor extends WorkerHost {
   private readonly logger = new Logger(ProcessPaymentProcessor.name);
-  constructor(
-    @Inject(CACHE_MANAGER) private readonly cacheManager: Cache,
-    private readonly createPaymentService: CreatePaymentService,
-  ) {
+  constructor(private readonly createPaymentService: CreatePaymentService) {
     super();
   }
   async process(job: Job<CreatePaymentRequestDto, Payment>): Promise<any> {
@@ -46,42 +41,51 @@ export class ProcessPaymentProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   async onFailed(job: Job<CreatePaymentRequestDto, Payment>, error: Error) {
+    const maxAttempts = job.opts.attempts || 1;
+    const currentAttempt = job.attemptsMade + 1;
+
     this.logger.error(
-      `Error to process the job ID: ${job.id}): ${error.message}`,
+      `Failed to process job ${job.id} (attempt ${currentAttempt}/${maxAttempts}): ${error.message}`,
       error.stack,
     );
 
-    if (job.attemptsMade < (job.opts.attempts || 1)) {
+    // If we have retries left, let the queue handle the retry
+    if (currentAttempt < maxAttempts) {
       this.logger.warn(
-        `Retrying (attempts ${job.attemptsMade + 1}/${job.opts.attempts || 1}): ${job.id}`,
+        `Will retry job ${job.id} (attempt ${currentAttempt + 1}/${maxAttempts})`,
       );
       return;
     }
-
-    this.logger.warn(`No more attempts left, moving job to failed: ${job.id}`);
     try {
-      const isMainProcessorFailing = await this.cacheManager.get<boolean>(
-        'mainProcessorStatus',
+      await this.createPaymentService.execute(job.data, 'default');
+      this.logger.log(`default processor succeeded for job ${job.id}`);
+      return;
+    } catch (dfError) {
+      this.logger.error(
+        `default processor also failed for job ${job.id}: ${dfError.message}`,
+        dfError.stack,
       );
+    }
 
-      if (isMainProcessorFailing) {
-        this.logger.log(
-          `Main processor is failing. Attempting with 'fallback' service for job ${job.id}.`,
-        );
-        await this.createPaymentService.execute(job.data, 'fallback');
-      } else {
-        this.logger.log(
-          `All retries exhausted. Attempting with 'fallback' service for job ${job.id}.`,
-        );
-        await this.createPaymentService.execute(job.data, 'fallback');
-      }
+    this.logger.warn(
+      `All attempts failed for job ${job.id}, trying fallback...`,
+    );
+
+    try {
+      await this.createPaymentService.execute(job.data, 'fallback');
+      this.logger.log(`Fallback processor succeeded for job ${job.id}`);
     } catch (fallbackError) {
-      await job.moveToFailed(
-        new Error('Error to process payment.'),
-        null,
-        false,
+      this.logger.error(
+        `Fallback processor also failed for job ${job.id}: ${fallbackError.message}`,
+        fallbackError.stack,
       );
-      throw fallbackError;
+      await job.moveToFailed(
+        new Error(
+          `All attempts and fallback processor failed: ${fallbackError.message}`,
+        ),
+        null, // token
+        false, // don't fetch the current job state
+      );
     }
   }
 }
