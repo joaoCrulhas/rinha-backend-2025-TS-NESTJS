@@ -12,8 +12,13 @@ export class ProcessPaymentProcessor extends WorkerHost {
     super();
   }
   async process(job: Job<CreatePaymentRequestDto, Payment>): Promise<any> {
-    this.logger.debug(`Processing payment: ${JSON.stringify(job.data)}`);
-    return await this.createPaymentService.execute(job.data, 'default');
+    try {
+      this.logger.debug(`Processing payment: ${JSON.stringify(job.data)}`);
+      return await this.createPaymentService.execute(job.data, 'default');
+    } catch (e) {
+      this.logger.error(`Error in default payment processor`);
+      throw e;
+    }
   }
 
   @OnWorkerEvent('completed')

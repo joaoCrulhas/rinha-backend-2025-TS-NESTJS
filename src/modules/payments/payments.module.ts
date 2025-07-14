@@ -69,7 +69,11 @@ const rinhaPaymentProcessorAdapter: FactoryProvider = {
       name: 'process-payment-queue',
       defaultJobOptions: {
         attempts: 3,
-        removeOnComplete: true,
+        removeOnFail: true,
+        removeOnComplete: {
+          count: 1000,
+          age: 3600,
+        },
         backoff: {
           type: 'exponential',
           delay: 1000,
