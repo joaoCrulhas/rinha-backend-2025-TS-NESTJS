@@ -19,14 +19,21 @@ export class CreatePaymentService {
     input: CreatePaymentRequestDto,
     server: Host,
   ): Promise<Payment> {
-    const requestedAt = new Date();
-    this.logger.debug(`Registering payment: ${JSON.stringify(input)}`);
-    const { source } = await this.createPaymentAdapter.execute(input, server);
-    return await this.paymentRepository.createPayment(
-      input.correlationId,
-      input.amount,
-      requestedAt,
-      source,
-    );
+    try {
+      const requestedAt = new Date();
+      this.logger.debug(`Registering payment: ${JSON.stringify(input)}`);
+      const { source } = await this.createPaymentAdapter.execute(input, server);
+      return await this.paymentRepository.createPayment(
+        input.correlationId,
+        input.amount,
+        requestedAt,
+        source,
+      );
+    } catch (e) {
+      this.logger.error(
+        `Error in ${server} payment processor, errorMessage: ${e.message}`,
+      );
+      throw e;
+    }
   }
 }

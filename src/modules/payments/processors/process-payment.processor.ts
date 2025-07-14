@@ -23,14 +23,12 @@ export class ProcessPaymentProcessor extends WorkerHost {
 
   @OnWorkerEvent('failed')
   async onFailed(job: Job<CreatePaymentRequestDto, Payment>) {
-    this.logger.log(`Processing payment: ${JSON.stringify(job.data)}`);
     try {
       this.logger.log(`Retrying payment: ${JSON.stringify(job.data)}`);
       await this.createPaymentService.execute(job.data, 'default');
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (error: any) {
-      this.logger.error(
-        `Retrying payment: ${JSON.stringify(error)} with fallback`,
-      );
+      this.logger.error(`Retrying payment with fallback`);
       await this.createPaymentService.execute(job.data, 'fallback');
     }
   }
