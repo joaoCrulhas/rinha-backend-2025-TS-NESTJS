@@ -19,13 +19,11 @@ export class AllExceptionsFilter extends BaseExceptionFilter {
         ? exception.getStatus()
         : HttpStatus.INTERNAL_SERVER_ERROR;
 
-    console.error(`Erro ${status} na rota ${request.url}:`, exception); // Logar o erro
-
     response.status(status).json({
       statusCode: status,
       timestamp: new Date().toISOString(),
       path: request.url,
-      message: 'Ocorreu um erro interno no servidor.', // Mensagem genérica para o cliente
+      message: 'Error',
     });
     // super.catch(exception, host); // Se quiser que o NestJS trate erros conhecidos de forma padrão
   }

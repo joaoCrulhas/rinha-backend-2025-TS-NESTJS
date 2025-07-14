@@ -45,7 +45,6 @@ export class RinhaPaymentProcessorAdapter
       };
     } catch (e) {
       this.logger.error(`Error in ${host} payment processor`);
-      this.logger.error(e);
       throw e;
     }
   }
