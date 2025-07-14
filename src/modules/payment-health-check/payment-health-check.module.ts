@@ -37,5 +37,6 @@ const getPaymentProcessorFactory: FactoryProvider = {
 @Module({
   imports: [ScheduleModule.forRoot(), HttpModule],
   providers: [getPaymentProcessorFactory, PaymentHealthCheckCronService],
+  exports: [getPaymentProcessorFactory],
 })
 export class PaymentHealthCheckModule {}

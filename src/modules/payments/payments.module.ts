@@ -23,6 +23,7 @@ import { RinhaPaymentProcessorAdapter } from '@payments/adapters';
 import { ServerType } from '@payments/types';
 import { ConfigService } from '@nestjs/config';
 import { PaymentProcessorType } from '@payments/protocols';
+import { PaymentHealthCheckModule } from '@payment-health-check/payment-health-check.module';
 
 const paymentRepositoryFactory: FactoryProvider = {
   inject: ['DATA_SOURCE'],
@@ -63,6 +64,7 @@ const rinhaPaymentProcessorAdapter: FactoryProvider = {
     PurgeController,
   ],
   imports: [
+    PaymentHealthCheckModule,
     DatabaseModule,
     HttpModule,
     BullModule.registerQueue({
