@@ -12,4 +12,6 @@ export interface IPaymentRepository {
     to?: Date,
     from?: Date,
   ): Promise<Payment[]>;
+
+  purgePayments(): Promise<void>;
 }

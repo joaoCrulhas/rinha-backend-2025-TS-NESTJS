@@ -40,4 +40,8 @@ export class PaymentRepositoryTypeormRepository implements IPaymentRepository {
     }
     return await queryBuilder.getMany();
   }
+
+  async purgePayments(): Promise<void> {
+    await this.paymentRepository.clear();
+  }
 }
