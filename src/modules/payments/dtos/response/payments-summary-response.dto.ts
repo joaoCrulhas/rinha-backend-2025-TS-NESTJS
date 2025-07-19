@@ -15,6 +15,8 @@ export class PaymentsData {
   constructor(totalRequests: number, totalAmount: number) {
     this.totalRequests = totalRequests;
     this.totalAmount = totalAmount;
+    // cast to two decimal places
+    this.totalAmount = Math.round(this.totalAmount * 100) / 100;
   }
 }
 

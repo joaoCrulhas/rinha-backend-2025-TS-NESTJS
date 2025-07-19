@@ -1,9 +1,13 @@
 import { IPaymentRepository } from '@payments/repository';
-import { Repository } from 'typeorm';
+import { MongoRepository } from 'typeorm';
 import { Payment } from '@payments/entities';
+import { InjectRepository } from '@nestjs/typeorm';
 
 export class PaymentRepositoryTypeormRepository implements IPaymentRepository {
-  constructor(private paymentRepository: Repository<Payment>) {}
+  constructor(
+    @InjectRepository(Payment)
+    private readonly paymentRepository: MongoRepository<Payment>,
+  ) {}
 
   async createPayment(
     correlationId: string,
@@ -11,12 +15,13 @@ export class PaymentRepositoryTypeormRepository implements IPaymentRepository {
     requestedAt: Date,
     source: string,
   ): Promise<Payment> {
-    return await this.paymentRepository.save({
+    const newPayment = this.paymentRepository.create({
       correlationId,
       amount,
       requestedAt,
       source,
     });
+    return await this.paymentRepository.save(newPayment);
   }
 
   async getPaymentsSummary(
@@ -24,15 +29,16 @@ export class PaymentRepositoryTypeormRepository implements IPaymentRepository {
     to?: Date,
     from?: Date,
   ): Promise<Payment[]> {
-    const queryBuilder = this.paymentRepository.createQueryBuilder('payment');
-    queryBuilder.andWhere('payment.source = :source', { source });
+    const query: any = {
+      source: source,
+    };
     if (from) {
-      queryBuilder.andWhere('payment.requestedAt >= :from', { from });
+      query.requestedAt = { ...query.requestedAt, $gte: from };
     }
     if (to) {
-      queryBuilder.andWhere('payment.requestedAt <= :to', { to });
+      query.requestedAt = { ...query.requestedAt, $lte: to };
     }
-    return await queryBuilder.getMany();
+    return await this.paymentRepository.find({ where: query });
   }
 
   async purgePayments(): Promise<void> {

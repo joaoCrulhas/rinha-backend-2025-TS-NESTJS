@@ -1,5 +1,4 @@
 import { FactoryProvider, Module } from '@nestjs/common';
-import { DatabaseModule } from '@database/database.module';
 import {
   CreatePaymentService,
   PaymentsSummaryService,
@@ -26,10 +25,10 @@ import { PaymentProcessorType } from '@payments/protocols';
 import { PaymentHealthCheckModule } from '@payment-health-check/payment-health-check.module';
 
 const paymentRepositoryFactory: FactoryProvider = {
-  inject: ['DATA_SOURCE'],
+  inject: [DataSource],
   provide: 'PAYMENT_REPOSITORY',
   useFactory(dataSource: DataSource): IPaymentRepository {
-    const paymentRepository = dataSource.getRepository(Payment);
+    const paymentRepository = dataSource.getMongoRepository(Payment);
     return new PaymentRepositoryTypeormRepository(paymentRepository);
   },
 };
@@ -65,7 +64,7 @@ const rinhaPaymentProcessorAdapter: FactoryProvider = {
   ],
   imports: [
     PaymentHealthCheckModule,
-    DatabaseModule,
+    // DatabaseModule,
     HttpModule,
     BullModule.registerQueue({
       name: 'process-payment-queue',

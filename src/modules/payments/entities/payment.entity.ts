@@ -1,11 +1,18 @@
-import { Column, Entity, PrimaryColumn } from 'typeorm';
+import { Column, Entity, ObjectId, ObjectIdColumn } from 'typeorm';
 
-@Entity()
+@Entity({
+  name: 'payment',
+})
 export class Payment {
-  @PrimaryColumn()
+  @ObjectIdColumn()
+  _id: ObjectId;
+
+  @Column({
+    unique: true,
+  })
   correlationId: string;
 
-  @Column('float')
+  @Column({ type: 'double' })
   amount: number;
 
   @Column('varchar')

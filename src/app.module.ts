@@ -3,30 +3,26 @@ import { AppController } from './app.controller';
 import { PaymentsModule } from '@payments/payments.module';
 import { BullModule } from '@nestjs/bullmq';
 import * as process from 'node:process';
-import { CacheModule } from '@nestjs/cache-manager';
-import { createKeyv, Keyv } from '@keyv/redis';
-import { CacheableMemory } from 'cacheable';
-import { PaymentHealthCheckModule } from '@payment-health-check/payment-health-check.module';
-import { ConfigModule } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
+import { TypeOrmModule } from '@nestjs/typeorm';
+import { Payment } from '@payments/entities';
 
 @Module({
   imports: [
+    TypeOrmModule.forRootAsync({
+      imports: [ConfigModule], // Importa ConfigModule para usar ConfigService
+      useFactory: async (configService: ConfigService) => ({
+        type: 'mongodb',
+        url: configService.get<string>('MONGO_URI'),
+        synchronize: true,
+        logging: true,
+        entities: [Payment],
+        useUnifiedTopology: true,
+      }),
+      inject: [ConfigService], // Injeta ConfigService no useFactory
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
-    }),
-    CacheModule.registerAsync({
-      isGlobal: true,
-      useFactory: async () => {
-        const redisUrl: string = `redis://${process.env.REDIS_HOST || 'localhost'}:${process.env.REDIS_PORT || '6379'}`;
-        return {
-          stores: [
-            new Keyv({
-              store: new CacheableMemory({ ttl: 60000, lruSize: 5000 }),
-            }),
-            createKeyv(redisUrl),
-          ],
-        };
-      },
     }),
     BullModule.forRoot({
       connection: {
@@ -35,9 +31,6 @@ import { ConfigModule } from '@nestjs/config';
       },
     }),
     PaymentsModule,
-    ...(process.env.RUNHEALTHCHECK === 'true'
-      ? [PaymentHealthCheckModule]
-      : []),
   ],
   controllers: [AppController],
   providers: [],
