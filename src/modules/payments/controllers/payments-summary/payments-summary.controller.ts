@@ -13,6 +13,8 @@ export class PaymentsSummaryController {
     @Query('to') to?: Date,
     @Query('from') from?: Date,
   ): Promise<PaymentsSummaryResponseDto> {
-    return await this.paymentsSummaryService.execute(to, from);
+    const toDate = to ? new Date(to) : undefined;
+    const fromDate = from ? new Date(from) : undefined;
+    return await this.paymentsSummaryService.execute(toDate, fromDate);
   }
 }

@@ -31,11 +31,6 @@ services:
   mongodb:
     image: mongodb/mongodb-community-server:latest
     container_name: mongodb
-    healthcheck:
-      test: ["CMD", "mongo", "--eval", "print(\"waited for connection\")"]
-      interval: 10s
-      timeout: 10s
-      retries: 5
     ports:
       - "27017:27017"
     networks:
@@ -97,6 +92,23 @@ services:
 #      - app2
 #      - app1
     restart: unless-stopped
+
+  mongo-express:
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongodb # Nome do serviço MongoDB
+      ME_CONFIG_MONGODB_PORT: 27017
+      ME_CONFIG_MONGODB_ADMINUSERNAME: ""
+      ME_CONFIG_MONGODB_ADMINPASSWORD: ""
+      ME_CONFIG_BASICAUTH_USERNAME: ""
+      ME_CONFIG_BASICAUTH_PASSWORD: ""
+    image: mongo-express
+    container_name: mongo-express
+    networks:
+      - backend # Ambos os serviços precisam estar na mesma rede
+    depends_on:
+      - mongodb
+    ports:
+      - "8081:8081"
 
 networks:
   backend:
